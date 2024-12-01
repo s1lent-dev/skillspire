@@ -1,0 +1,14 @@
+model Post {
+    postId    String   @id @default(uuid())
+    authorId  String
+    title     String
+    content   String
+    media     String[]
+    author    User      @relation(name: "UserPosts", fields: [authorId], references: [userId])
+    comments  Comment[] @relation("PostComments")
+    likes     Like[]    @relation("PostLikes")
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    
+    @@index([authorId, createdAt])
+}

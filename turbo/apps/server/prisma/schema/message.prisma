@@ -1,0 +1,49 @@
+model Message {
+    messageId   String        @id @default(uuid())
+    content     String?
+    senderId    String
+    sender      User          @relation("UserSentMessages", fields: [senderId], references: [userId])
+    chatId      String
+    chat        Chat          @relation("ChatMessages", fields: [chatId], references: [chatId])
+    createdAt   DateTime      @default(now())
+    messageType MessageType
+    status      MessageStatus @default(PENDING)
+    mediaUrl    String?
+    reads       MessageRead[] 
+
+    @@index([senderId, chatId, createdAt])
+}
+
+model MessageRead {
+    id         String    @id @default(uuid())
+    chatId     String
+    chat       Chat      @relation("ChatMessageReads", fields: [chatId], references: [chatId])
+    messageId  String
+    message    Message   @relation(fields: [messageId], references: [messageId])
+    userId     String
+    user       User      @relation("UserReadMessages", fields: [userId], references: [userId])
+    readAt     DateTime  @default(now())
+
+    @@unique([messageId, userId]) 
+}
+
+enum MessageType {
+    TEXT
+    IMAGE
+    VIDEO
+    AUDIO
+    FILE
+    LOCATION
+    CONTACT
+    STICKER
+    EMOJI
+    GIF
+    GROUP
+}
+
+enum MessageStatus {
+    PENDING
+    SENT
+    DELIVERED
+    READ
+}
