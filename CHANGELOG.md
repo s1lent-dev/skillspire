@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/s1lent-dev/skillspire/compare/v1.0.0...v1.1.0) (2024-12-03)
+
+
+### Features
+
+* add auth controllers with zod validation :sparkles: ([817c082](https://github.com/s1lent-dev/skillspire/commit/817c0820a85838eb9a84f144c6fb3fd58536a5c3))
+
 # 1.0.0 (2024-12-01)
 
 
