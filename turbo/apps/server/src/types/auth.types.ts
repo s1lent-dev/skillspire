@@ -67,6 +67,7 @@ interface LoginOauthRequest extends Request {
     user? : {
         accessToken: string;
         refreshToken: string;
+        isRegistered: boolean;
     }
 }
 

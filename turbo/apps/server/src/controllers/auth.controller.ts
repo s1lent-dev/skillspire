@@ -7,6 +7,8 @@ import { ForgotPasswordRequest, LoginOauthRequest, LoginRequest, RegisterRequest
 import { COOKIE_OPTIONS, FRONTEND_URL, HTTP_STATUS_ACCEPTED, HTTP_STATUS_BAD_REQUEST, HTTP_STATUS_CREATED, HTTP_STATUS_OK } from '../config/config.js';
 import { compareCode, comparePassword, generateResetPasswordToken, generateTokens, generateVerificationCode, hashPassword } from '../utils/helper.util.js';
 import { Gender } from '@prisma/client';
+import { rabbitMQService } from '../app.js';
+import { ExchangeTypes, MailType, QueueTypes } from '../types/service.types.js';
 
 
 
@@ -18,7 +20,7 @@ const verifyEmail = AsyncHandler(async (req: ValidatedRequest<VerifyEmailRequest
     }
     const { verificationCode, hashedCode } = await generateVerificationCode();
     await prisma.verificationCode.create({ data: { email, code: hashedCode, expiresAt: new Date(Date.now() + 1000 * 60 * 2) } });
-    //send email with verification code
+    await rabbitMQService.publishToExchange(ExchangeTypes.EMAIL_EXCHANGE, QueueTypes.VERIFY_EMAIL, { email, contentType: MailType.VERIFY_EMAIL, content: verificationCode });
     res.status(HTTP_STATUS_OK).json(new ResponseHandler('Verification code sent successfully', HTTP_STATUS_OK, {}));
 });
 
@@ -62,12 +64,12 @@ const register = AsyncHandler(async (req: ValidatedRequest<RegisterRequest['body
                 gender: gender as Gender | null, dob: dobDate, phone, address, location, avatar, bio
             }
         });
+        await rabbitMQService.publishToExchange(ExchangeTypes.EMAIL_EXCHANGE, QueueTypes.WELCOME_EMAIL, { email, contentType: MailType.WELCOME_EMAIL, content: 'Welcome to our platform' });
     } catch(err) {
         console.log(err);
         await User.findByIdAndDelete(user._id);
         return next(new ErrorHandler('User creation failed', HTTP_STATUS_BAD_REQUEST));
     }
-
     res.status(HTTP_STATUS_CREATED).json(new ResponseHandler('User created successfully', HTTP_STATUS_CREATED, user));
 });
 
@@ -91,15 +93,17 @@ const login = AsyncHandler(async (req: ValidatedRequest<LoginRequest['body'], Lo
 
 
 const loginGoogle = AsyncHandler(async (req: LoginOauthRequest, res: Response, next: NextFunction) => {
-    const { accessToken, refreshToken } = req.user!;
-    res.status(HTTP_STATUS_ACCEPTED).cookie("accessToken", accessToken, COOKIE_OPTIONS).cookie("refreshToken", refreshToken, COOKIE_OPTIONS).redirect(FRONTEND_URL);
+    const { accessToken, refreshToken, isRegistered } = req.user!;
+    isRegistered ? res.status(HTTP_STATUS_ACCEPTED).cookie("accessToken", accessToken, COOKIE_OPTIONS).cookie("refreshToken", refreshToken, COOKIE_OPTIONS).redirect(FRONTEND_URL) :
+    res.status(HTTP_STATUS_OK).redirect(`${FRONTEND_URL}/register`);
 });
 
 
 
 const loginGithub = AsyncHandler(async (req: LoginOauthRequest, res: Response, next: NextFunction) => {
-    const { accessToken, refreshToken } = req.user!;
-    res.status(HTTP_STATUS_ACCEPTED).cookie("accessToken", accessToken, COOKIE_OPTIONS).cookie("refreshToken", refreshToken, COOKIE_OPTIONS).redirect(FRONTEND_URL);
+    const { accessToken, refreshToken, isRegistered } = req.user!;
+    isRegistered ? res.status(HTTP_STATUS_ACCEPTED).cookie("accessToken", accessToken, COOKIE_OPTIONS).cookie("refreshToken", refreshToken, COOKIE_OPTIONS).redirect(FRONTEND_URL) :
+    res.status(HTTP_STATUS_OK).redirect(`${FRONTEND_URL}/register`);
 });
 
 
@@ -133,7 +137,7 @@ const forgotPassword = AsyncHandler(async (req: ValidatedRequest<ForgotPasswordR
     }
     const token = await generateResetPasswordToken(user.userId);
     const resetLink = `${FRONTEND_URL}/reset-password?token=${token}`;
-    // send email with reset link
+    await rabbitMQService.publishToExchange(ExchangeTypes.EMAIL_EXCHANGE, QueueTypes.RESET_PASSWORD, { email, contentType: MailType.RESET_PASSWORD, content: resetLink });
     res.status(HTTP_STATUS_OK).cookie('resetToken', token, COOKIE_OPTIONS).json(new ResponseHandler('Reset link sent successfully', HTTP_STATUS_OK, {}));
 });
 
