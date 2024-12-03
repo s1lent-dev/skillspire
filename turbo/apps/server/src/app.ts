@@ -17,6 +17,7 @@ import KafkaService from './lib/kafka.lib.js';
 import RabbitMQService from './lib/rabbitmq.lib.js';
 import { verifySocket } from './middlewares/verifySocket.middleware.js';
 import { ErrorMiddleware } from './middlewares/error.middleware.js';
+import authRouter from './routes/auth.routes.js';
 import { FRONTEND_URL, OAUTH_SESSION_SECRET } from './config/config.js';
 
 
@@ -74,6 +75,11 @@ app.use(session({
 }));
 app.use(passport.initialize());
 app.use(passport.session());
+
+
+// Routes
+
+app.use('/auth', authRouter);
 
 
 app.get('/', (req: Request, res: Response) => {

@@ -1,13 +1,23 @@
+enum Gender {
+    MALE
+    FEMALE
+}
+
 model User {
     userId           String              @id @unique
     googleId         String?             @unique
     githubId         String?             @unique
-    firstName        String?
-    lastName         String?
-    displayName      String?
+    firstName        String?             @default("skillspire")
+    lastName         String?             @default("user")
+    displayName      String?             @default("skillspire user")
     username         String              @unique
     email            String              @unique
     password         String
+    gender           Gender?
+    dob              DateTime?
+    phone            String?
+    address          String?
+    location         String?
     avatar           String?
     bio              String?
     lastUsernameEdit DateTime?
