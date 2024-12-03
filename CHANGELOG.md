@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/s1lent-dev/skillspire/compare/v1.1.0...v1.2.0) (2024-12-03)
+
+
+### Features
+
+* add oauth setup and rabbitmq setup with email service :sparkles: ([6a813c4](https://github.com/s1lent-dev/skillspire/commit/6a813c4949c5f09ab2a15b12ddd8ce1555127701))
+
 # [1.1.0](https://github.com/s1lent-dev/skillspire/compare/v1.0.0...v1.1.0) (2024-12-03)
 
 
