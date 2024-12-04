@@ -1,6 +1,7 @@
 import { Server, Socket } from "socket.io";
 import http, { IncomingMessage } from "http";
 import { FRONTEND_URL } from "../config/config.js";
+import { SocketEvent, SocketEvents } from "../types/service.types.js";
 
 
 interface CustomSocket extends Socket {
@@ -30,7 +31,7 @@ class SocketService {
 
     private initSockets() {
 
-        this.io.on("connection", (socket: Socket) => {
+        this.io.on(SocketEvents.CONNECTION, (socket: Socket) => {
             const userId = (socket as CustomSocket).request.user;
             if (this.userSocketsIds.has(userId)) {
                 console.log(`User ${userId} already has an active socket: ${this.userSocketsIds.get(userId)}.`);
@@ -43,7 +44,7 @@ class SocketService {
 
             this.registerEvents(socket);
 
-            socket.on("disconnect", () => {
+            socket.on(SocketEvents.DISCONNECT, () => {
                 console.log(`User ${userId} disconnected from socket ${socket.id}`);
                 this.userSocketsIds.delete(userId);
             });
@@ -53,21 +54,20 @@ class SocketService {
 
     protected registerEvents(socket: Socket) {
 
-        socket.on("join-room", (roomId: string) => {
-            socket.join(roomId);
-            console.log(`User ${socket.id} joined room ${roomId}`);
-        });
-
-        socket.on("leave-room", (roomId: string) => {
-            socket.leave(roomId);
-            console.log(`User ${socket.id} left room ${roomId}`);
-        });
-
+        socket.on(SocketEvents.NEW_MESSAGE, (data: MessageEvent) => {
+            console.log("New message event received: ", data);
+            // Publish message to kafka and redis pub/sub
+        })
     }
 
     protected getSockets = (userIds: string[]) => {
         const sockets = userIds.map((userId)=> this.userSocketsIds.get(userId));
         return sockets;
+    }
+
+    public async emitEvents<T extends SocketEvent>(event: SocketEvents, data: T, userIds: string[]) {
+        const socketMembers = this.getSockets(userIds) as string[];
+        this.io.to(socketMembers).emit(event, data);
     }
 
     public getIO = () => this.io;

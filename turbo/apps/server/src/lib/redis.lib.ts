@@ -1,24 +1,25 @@
 import Redis from "ioredis";
 import { REDIS_HOST, REDIS_PORT } from "../config/config.js";
+import { SocketEvents } from "../types/service.types.js";
+import { redisMessageEventHandler } from "../utils/service.util.js";
 
 class RedisService {
     
     protected client: Redis | null = null;
-    protected pubsub1: Redis | null = null;
-    protected pubsub2: Redis | null = null;
+    protected pubsub: Redis | null = null;
+
+    private readonly subscribers: Record<string, (message: string, channel: SocketEvents) => Promise<void>> = {
+        [SocketEvents.NEW_MESSAGE]: redisMessageEventHandler,
+    }
 
     constructor() {}
 
-    public async initService() {
+    private async initService() {
         this.client = new Redis({
             host: REDIS_HOST,
             port: REDIS_PORT,
         });
-        this.pubsub1 = new Redis({
-            host: REDIS_HOST,
-            port: REDIS_PORT,
-        });
-        this.pubsub2 = new Redis({
+        this.pubsub = new Redis({
             host: REDIS_HOST,
             port: REDIS_PORT,
         });
@@ -43,36 +44,21 @@ class RedisService {
         );
     }
 
-
-    async subscribe1(channel: string, handler: (message: string) => void) {
-        this.pubsub1?.subscribe(channel);
-        console.log(`Subscribed to channel: ${channel}`);
-        this.pubsub1?.on("message", (receivedChannel, message) => {
-            if (receivedChannel === channel) {
-                console.log(
-                    `Received message on channel: ${channel}`,
-                    "Message:",
-                    message
-                );
-                handler(message);
-            }
-        });
-    }
-
-
-    async subscribe2(channel: string, handler: (message: string) => void) {
-        this.pubsub2?.subscribe(channel);
-        console.log(`Subscribed to channel: ${channel}`);
-        this.pubsub2?.on("message", (receivedChannel, message) => {
-            if (receivedChannel === channel) {
-                console.log(
-                    `Received message on channel: ${channel}`,
-                    "Message:",
-                    message
-                );
-                handler(message);
-            }
-        });
+    private async setupSubscribers() {
+        for (const [channel, handler] of Object.entries(this.subscribers)) {
+            this.pubsub?.subscribe(channel);
+            console.log(`Subscribed to channel: ${channel}`);
+            this.pubsub?.on("message", (receivedChannel, message) => {
+                if (receivedChannel === channel) {
+                    console.log(
+                        `Received message on channel: ${channel}`,
+                        "Message:",
+                        message
+                    );
+                    handler(message, channel as SocketEvents);
+                }
+            });
+        }
     }
 
 
@@ -127,6 +113,13 @@ class RedisService {
     async flushCache() {
         await this.client?.flushall();
         console.log('Cache flushed');
+    }
+
+
+    public async init() {
+        await this.initService();
+        await this.setupSubscribers();
+        console.log("Redis infrastructure initialized");
     }
 }
 

@@ -24,12 +24,11 @@ import { FRONTEND_URL, OAUTH_SESSION_SECRET } from './config/config.js';
 // Services 
 const initServices = async () => {
     try {
-        const redisService = new RedisService();
         const kafkaService = new KafkaService();
+        const redisService = new RedisService();
         const rabbitMQService = new RabbitMQService();
-        await redisService.initService();
-        await kafkaService.initService();
-        await rabbitMQService.initService();
+        await kafkaService.init();
+        await redisService.init();
         await rabbitMQService.init();
         return { redisService, kafkaService, rabbitMQService };
     } catch (err) {
