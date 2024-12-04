@@ -100,6 +100,13 @@ class RedisService {
         console.log(`Cache deleted for key: ${key}`);
     }
 
+    async invalidateCache(keys: string[]) {
+        const pipeline = this.client?.pipeline();
+        keys.forEach((key) => pipeline?.del(key));
+        await pipeline?.exec();
+        console.log(`Cache invalidated for keys: ${keys}`);
+    }
+
     async delCachePattern(pattern: string) {
         let cursor = '0';
         do {

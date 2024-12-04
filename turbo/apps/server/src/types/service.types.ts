@@ -11,6 +11,13 @@ enum QueueTypes {
     VERIFY_EMAIL = "verify-email",
 }
 
+
+// Enums for Redis Keys
+enum RedisKeys {
+    GET_CONNECTIONS = "get-connections",
+    GET_CHATS = "get-chats",
+}
+
 // Mail Service
 enum MailType {
     WELCOME_EMAIL,
@@ -28,4 +35,4 @@ interface MailContent {
 type RabbitMQContent = MailContent;
 
 
-export { ExchangeTypes, QueueTypes, MailType, MailContent, RabbitMQContent };
+export { ExchangeTypes, QueueTypes, RedisKeys, MailType, MailContent, RabbitMQContent };

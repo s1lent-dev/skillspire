@@ -17,7 +17,6 @@ enum Role {
 scalar Date
 
 
-
 # Interfaces 
 
 
