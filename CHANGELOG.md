@@ -1,3 +1,10 @@
+## [1.2.1](https://github.com/s1lent-dev/skillspire/compare/v1.2.0...v1.2.1) (2024-12-04)
+
+
+### Bug Fixes
+
+* refactored micorservices properly :recycle: ([3a8a7c2](https://github.com/s1lent-dev/skillspire/commit/3a8a7c2a955842f104d07791776a8468cf3cec4b))
+
 # [1.2.0](https://github.com/s1lent-dev/skillspire/compare/v1.1.0...v1.2.0) (2024-12-03)
 
 
